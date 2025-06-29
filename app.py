@@ -1,12 +1,12 @@
-import os
 import streamlit as st
 import sys
+import os
 from dotenv import load_dotenv
 from utils.ai_client import query_gemma
 from utils.loader import load_materi
 from utils.network_utils import check_internet_connection
-from utils.speech_input import get_audio_input # Import fungsi baru
 
+# Load variabel lingkungan
 load_dotenv()
 # Coba impor db_manager hanya jika psycopg2 terinstal dan ada koneksi
 try:
@@ -43,7 +43,7 @@ else:
     DB_ENABLED = False # Pastikan DB_ENABLED False jika tidak ada internet atau gagal impor
 
 # Load materi
-materi = load_materi("data/materi/materi_kelas1.json") # Pastikan path sesuai dengan struktur README.md [cite: 1]
+materi = load_materi("data/materi/materi_kelas1.json") # Pastikan path sesuai dengan struktur README.md
 
 # Sidebar untuk manajemen chat
 st.sidebar.header("Manajemen Obrolan")
@@ -121,34 +121,14 @@ else:
     st.info("Belum ada percakapan dalam sesi ini.")
 st.markdown("---")
 
-# Inisialisasi session state untuk input teks jika belum ada
-if "user_question_input_value" not in st.session_state:
-    st.session_state.user_question_input_value = ""
-
 # Input pertanyaan
-user_q_text = st.text_input(
-    "Ketik pertanyaan Anda:",
-    value=st.session_state.user_question_input_value, # <--- Gunakan nilai dari session state
-    key="user_question_text_input" # Tetap gunakan key untuk komponen ini
-)
-
-# Tombol untuk Speak-to-Text
-st.write("Atau, gunakan suara Anda:")
-if st.button("Mulai Bicara (Tekan & Bicara)", key="speak_button"):
-    st.info("Mendengarkan... Pastikan mikrofon Anda aktif.")
-    spoken_text = get_audio_input()
-    if spoken_text and not spoken_text.startswith(("Tidak ada suara terdeteksi", "Error")):
-        st.session_state.user_question_input_value = spoken_text
-        st.rerun()
-    else:
-        st.warning(spoken_text)
-
-user_q = user_q_text
+user_q = st.text_input("Tanya sesuatu ke AI:", key="user_question_input")
 
 if st.button("Tanya AI"):
     if not user_q:
-        st.warning("Mohon masukkan pertanyaan Anda atau gunakan suara.")
+        st.warning("Mohon masukkan pertanyaan Anda.")
     else:
+        # Tambahkan pesan pengguna ke riwayat sesi (selalu)
         st.session_state.messages.append({"role": "user", "content": user_q})
 
         # Simpan ke database hanya jika online dan DB aktif
@@ -164,6 +144,9 @@ if st.button("Tanya AI"):
 
         with st.spinner("AI sedang berpikir..."):
             full_prompt = f"Ada pelajaran tentang {st.session_state.current_topic}. Jawab pertanyaan ini: {user_q}"
+            conversation_history_for_prompt = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.messages[:-1]])
+            if conversation_history_for_prompt:
+                full_prompt = f"Percakapan sebelumnya:\n{conversation_history_for_prompt}\n\nTopik: {st.session_state.current_topic}. Pertanyaan baru: {user_q}"
 
             response = query_gemma(full_prompt)
 
@@ -174,6 +157,5 @@ if st.button("Tanya AI"):
             if has_internet and DB_ENABLED and st.session_state.current_chat_id:
                 add_message(st.session_state.current_chat_id, "ai", response)
 
-        # Setelah AI menjawab, kosongkan input teks agar pengguna bisa bertanya lagi
-        st.session_state.user_question_input_value = "" # <--- Kosongkan input setelah pertanyaan dikirim
+        # Re-run Streamlit untuk menampilkan pesan baru
         st.rerun()
