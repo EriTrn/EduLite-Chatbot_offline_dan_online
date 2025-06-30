@@ -3,14 +3,12 @@ from datetime import datetime
 import os
 
 # Konfigurasi database
-# Pastikan konfigurasi ini aman di lingkungan produksi,
-# misalnya dengan menggunakan variabel lingkungan
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "database": os.getenv("DB_NAME", "edulite_db"),
+    "host": os.getenv("DB_HOST"),
+    "database": os.getenv("DB_NAME"),
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
-    "port": os.getenv("DB_PORT", 5432)
+    "port": os.getenv("DB_PORT", 52285)
 }
 
 def get_db_connection():
@@ -37,7 +35,7 @@ def create_tables():
     conn = None
     try:
         conn = get_db_connection()
-        if conn: # Hanya lanjutkan jika koneksi berhasil
+        if conn:
             cur = conn.cursor()
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS chats (
@@ -149,5 +147,3 @@ def add_message(chat_id, sender, content):
     finally:
         if conn:
             conn.close()
-
-# create_tables() # Jangan panggil di sini, panggil di app.py secara kondisional
