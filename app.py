@@ -9,8 +9,6 @@ from utils.network_utils import check_internet_connection
 # Load variabel lingkungan
 load_dotenv()
 
-# create tables
-create_tables()
 # Coba impor db_manager hanya jika psycopg2 terinstal dan ada koneksi
 try:
     from utils.db_manager import create_new_chat, get_all_chats, get_chat_messages, add_message, create_tables
