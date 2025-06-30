@@ -147,3 +147,5 @@ def add_message(chat_id, sender, content):
     finally:
         if conn:
             conn.close()
+# create tables
+create_tables()
