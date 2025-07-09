@@ -34,9 +34,6 @@ def query_gemma(prompt: str) -> str:
     Mengirimkan prompt ke Google AI API menggunakan model yang ditentukan
     dan mengembalikan respons dalam bentuk teks.
     """
-    if not genai.get_key():
-        return "⚠️ Konfigurasi API Key Google AI gagal. Fungsi AI tidak dapat digunakan."
-        
     try:
         model = genai.GenerativeModel('gemma2-9b-it')
 
